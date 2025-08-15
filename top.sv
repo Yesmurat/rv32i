@@ -1,11 +1,13 @@
 // top module combines riscv with data and instruction memories
 
 module top (input logic clk, clr,
-            output logic [31:0] RD_instr, RD_data,
-            output logic [31:0] PCF,
-            output logic [31:0] ALUResultM, WriteDataM
+            output logic [31:0] WriteDataM
     );
 
+    logic [31:0] ALUResultM;
+    logic [31:0] PCF;
+    logic [31:0] RD_instr;
+    logic [31:0] RD_data;
     logic MemWriteM;
     logic [3:0] byteEnable;
 
