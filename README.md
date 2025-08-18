@@ -39,6 +39,6 @@ The design is verified via simulation using Altera Questa FPGA Simulator.
 
 ## Simulation
 ```
-    vlog src/*.sv tb/top_tb.sv
-    vsim top_tb
+vlog src/*.sv tb/top_tb.sv
+vsim top_tb
 ```
