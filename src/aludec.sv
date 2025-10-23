@@ -2,8 +2,6 @@ module aludec (input logic opb5, // for sub detection
                 input logic [2:0] funct3, // instr[14:12]
                 input logic funct7b5, // instr[30] for SUB/SRA
                 input logic [1:0] ALUOp,
-                input logic muldiv,
-                input logic [2:0] muldiv_fn,
                 output logic [3:0] ALUControl
 );
 

@@ -1,4 +1,6 @@
-module datapath (input logic clk, clr,
+module datapath (
+    
+                input logic clk, clr,
                 // Control signals
                 input logic RegWriteD,
                 input logic [1:0] ResultSrcD,
@@ -13,8 +15,12 @@ module datapath (input logic clk, clr,
                 input logic jumpRegD,
                 
                 // input signals from Hazard Unit
-                input logic StallF, StallD, FlushD, FlushE,
-                input logic [1:0] ForwardAE, ForwardBE,
+                input logic StallF,
+                input logic StallD,
+                input logic FlushD,
+                input logic FlushE,
+                input logic [1:0] ForwardAE,
+                input logic [1:0] ForwardBE,
 
                 input logic [31:0] RD_instr, RD_data,
 
@@ -31,38 +37,35 @@ module datapath (input logic clk, clr,
                 output logic [4:0] RdE, // outputs from EX stage
                 output logic PCSrcE, ResultSrcE_zero, RegWriteM, RegWriteW,
                 output logic [4:0] RdM, // output from MEM stage
-                output logic [4:0] RdW // output from WB stage
+                output logic [4:0] RdW, // output from WB stage
+                output logic SrcAsrcE,
+                output logic ALUSrcE
 
 );  
     // PC mux
     logic [31:0] PCPlus4F, PCTargetE, PCF_new;
-    logic PCSrcE_int;
-    logic [31:0] PCF_int;
-    assign PCSrcE = PCSrcE_int;
-    assign PCF = PCF_int;
 
     mux2 pcmux(
+
         .d0(PCPlus4F),
         .d1(PCTargetE),
-        .s(PCSrcE_int),
+        .s(PCSrcE),
         .y(PCF_new)
+
     );
 
     // Instruction Fetch (IF) stage
     IFregister ifreg(
+        
         .clk(clk),
         .en(~StallF),
         .clr(clr),
         .d(PCF_new),
-        .q(PCF_int)
+        .q(PCF)
+
     );
 
-    adder pcplus4(
-        .a(PCF_int),
-        .b(32'd4),
-        .y(PCPlus4F)
-    );
-
+    assign PCPlus4F = PCF + 32'd4;
 
     // Instruction Decode (ID) stage
     logic [31:0] PCD, PCPlus4D;
@@ -71,41 +74,33 @@ module datapath (input logic clk, clr,
     logic [31:0] ImmExtD;
     logic [4:0] RdD;
 
-    logic [31:0] InstrD_int;
-    assign InstrD = InstrD_int;
-
-    logic [4:0] Rs1D_int, Rs2D_int;
-    assign Rs1D = Rs1D_int;
-    assign Rs2D = Rs2D_int;
-
-    assign Rs1D_int = InstrD_int[19:15];
-    assign Rs2D_int = InstrD_int[24:20];
-    assign RdD = InstrD_int[11:7];
+    assign Rs1D = InstrD[19:15];
+    assign Rs2D = InstrD[24:20];
+    assign RdD = InstrD[11:7];
 
     IFIDregister ifidreg(
+
         .clk(clk),
         .clr(FlushD | clr),
         .en(~StallD),
-        .RD_instr(RD_instr), .PCF(PCF_int), .PCPlus4F(PCPlus4F),
-        .InstrD(InstrD_int), .PCD(PCD), .PCPlus4D(PCPlus4D)
+        .RD_instr(RD_instr),
+        .PCF(PCF),
+        .PCPlus4F(PCPlus4F),
+        .InstrD(InstrD), .PCD(PCD), .PCPlus4D(PCPlus4D)
     );
-	 
-	logic RegWriteW_int;
-    assign RegWriteW = RegWriteW_int;
 
     regfile rf(
-        .clk(clk), .we3(RegWriteW_int), .clr(clr),
-        .a1(Rs1D_int), .a2(Rs2D_int), .a3(RdW),
+        .clk(clk), .we3(RegWriteW), .clr(clr),
+        .a1(Rs1D), .a2(Rs2D), .a3(RdW),
         .wd3(ResultW), .rd1(RD1), .rd2(RD2)
     );
 
     extend ext(
-        .instr(InstrD_int),
+        .instr(InstrD),
         .immsrc(ImmSrcD),
         .immext(ImmExtD)
     );
 
-    // ----------------------------------------------------------------//
     // Execute (EX) stage
     logic [31:0] RD1E, RD2E, PCE;
     logic [31:0] ImmExtE;
@@ -113,21 +108,19 @@ module datapath (input logic clk, clr,
 
     logic [31:0] SrcAE, SrcBE;
     logic [31:0] WriteDataE;
-    logic [31:0] SrcAE_input1;
     logic [31:0] ALUResultE;
 
     logic RegWriteE;
     logic [1:0] ResultSrcE;
     logic MemWriteE, JumpE, BranchE;
     logic [3:0] ALUControlE;
-    logic ALUSrcE;
-    logic SrcAsrcE;
     logic [2:0] funct3E;
     logic branchTakenE;
     logic jumpRegE;
 
     IDEXregister idexreg(
-        .clk(clk), .clr(FlushE | clr),
+        .clk(clk),
+        .clr(FlushE | clr),
         // ID stage control signals
         .RegWriteD(RegWriteD),
         .ResultSrcD(ResultSrcD),
@@ -154,7 +147,7 @@ module datapath (input logic clk, clr,
 
         // datapath inputs & outputs
         .RD1(RD1), .RD2(RD2), .PCD(PCD),
-        .Rs1D(Rs1D_int), .Rs2D(Rs2D_int), .RdD(RdD),
+        .Rs1D(Rs1D), .Rs2D(Rs2D), .RdD(RdD),
         .ImmExtD(ImmExtD),
         .PCPlus4D(PCPlus4D),
 
@@ -164,35 +157,30 @@ module datapath (input logic clk, clr,
         .PCPlus4E(PCPlus4E)
     );
 
-    assign PCSrcE_int = (BranchE & branchTakenE) | JumpE;
+    assign PCSrcE = (BranchE & branchTakenE) | JumpE;
     assign ResultSrcE_zero = ResultSrcE[0];
-	 
-	logic [31:0] ALUResultM_int;
-    assign ALUResultM_int = ALUResultM;
 
-    mux3 SrcAE_input1mux(
-        .d0(RD1E), .d1(ResultW), .d2(ALUResultM_int), // inputs
-        .s(ForwardAE), // select signal
-        .y(SrcAE_input1) // output
-    );
-
-    mux2 SrcAEmux(
-        .d0(PCE), .d1(SrcAE_input1),
-        .s(SrcAsrcE), // new control signal that chooses either PC or RD1
+    // SrcA mux
+    mux4 inputA_mux(
+        .d0(RD1E),
+        .d1(ResultW),
+        .d2(ALUResultM),
+        .d3(PCE),
+        .s(ForwardAE),
         .y(SrcAE)
     );
 
-    mux3 WriteDataEmux(
-        .d0(RD2E), .d1(ResultW), .d2(ALUResultM_int),
+    // SrcB mux
+    mux4 inputB_mux(
+        .d0(RD2E),
+        .d1(ResultW),
+        .d2(ALUResultM),
+        .d3(ImmExtE),
         .s(ForwardBE),
-        .y(WriteDataE)
+        .y(SrcBE)
     );
 
-    mux2 SrcBEmux(
-        .d0(WriteDataE), .d1(ImmExtE), // inputs
-        .s(ALUSrcE), // select signal
-        .y(SrcBE) // output
-    );
+    assign WriteDataE = SrcBE;;
 
     branch_unit bu(
         .SrcAE(SrcAE), .SrcBE(SrcBE),
@@ -201,12 +189,9 @@ module datapath (input logic clk, clr,
     );
 
     logic [31:0] adder_base;
-    assign adder_base = jumpRegE ? SrcAE_input1 : PCE;
+    assign adder_base = jumpRegE ? SrcAE : PCE;
 
-    adder add(
-        .a(adder_base), .b(ImmExtE), // inputs
-        .y(PCTargetE) // output
-    );
+    assign PCTargetE = adder_base + ImmExtE;
 
     alu alu(
         .d0(SrcAE), .d1(SrcBE), //  inputs
@@ -218,14 +203,11 @@ module datapath (input logic clk, clr,
     // Memory write (MEM) stage
     logic [31:0] PCPlus4M;
     logic [2:0] funct3M;
-
-    logic RegWriteM_int;
-    assign RegWriteM = RegWriteM_int;
     
     logic [1:0] ResultSrcM;
 
     logic [1:0] byteAddrM;
-    assign byteAddrM = ALUResultM_int[1:0];
+    assign byteAddrM = ALUResultM[1:0];
 
     logic [31:0] load_data;
     logic [31:0] ImmExtM;
@@ -239,7 +221,7 @@ module datapath (input logic clk, clr,
         .funct3E(funct3E),
 
         // MEM stage control signals
-        .RegWriteM(RegWriteM_int),
+        .RegWriteM(RegWriteM),
         .ResultSrcM(ResultSrcM),
         .MemWriteM(MemWriteM),
         .funct3M(funct3M),
@@ -294,15 +276,15 @@ module datapath (input logic clk, clr,
     MEMWBregister wbreg(
         .clk(clk), .clr(clr),
         // MEM stage control signals
-        .RegWriteM(RegWriteM_int),
+        .RegWriteM(RegWriteM),
         .ResultSrcM(ResultSrcM),
 
         // WB stage control signals
-        .RegWriteW(RegWriteW_int),
+        .RegWriteW(RegWriteW),
         .ResultSrcW(ResultSrcW),
 
         // datapath inputs & outputs
-        .ALUResultM(ALUResultM_int),
+        .ALUResultM(ALUResultM),
         .load_data(load_data),
         .RdM(RdM),
         .ImmExtM(ImmExtM),

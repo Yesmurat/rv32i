@@ -4,8 +4,11 @@ module dmem (input logic clk, we,
              output logic [31:0] rd
     );
 
-    logic [31:0] RAM[63:0];
-    initial $readmemh("C:/intelFPGA_lite/rv32i/dmem.txt", RAM);
+    (* rom_style="distributed" *) logic [31:0] RAM[63:0];
+    
+    initial begin
+        $readmemh("C:/Users/Yesmurat Sagyndyk/Downloads/rv32i-main/rv32i-main/imem.txt", RAM);
+    end
 
     assign rd = RAM[a[31:2]]; // word-aligned
 
@@ -18,4 +21,5 @@ module dmem (input logic clk, we,
             end
         end
     end
+
 endmodule // Data memory

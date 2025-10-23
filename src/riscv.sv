@@ -1,12 +1,17 @@
-module riscv (input logic clk, clr,
-                        // inputs from Instruction and Data memories
-                        input logic [31:0] RD_instr, RD_data,
+module riscv (
 
-                        // outputs to Instruction and Data memories
-                        output logic [31:0] PCF,
-                        output logic [31:0] ALUResultM, WriteDataM,
-                        output logic MemWriteM,
-                        output logic [3:0] byteEnable);
+        input logic clk, clr,
+
+        // inputs from Instruction and Data memories
+        input logic [31:0] RD_instr, RD_data,
+
+        // outputs to Instruction and Data memories
+        output logic [31:0] PCF,
+        output logic [31:0] ALUResultM, WriteDataM,
+        output logic MemWriteM,
+        output logic [3:0] byteEnable
+    
+    );
 
     // control signals
     logic RegWriteD;
@@ -31,20 +36,17 @@ module riscv (input logic clk, clr,
 
     logic [4:0] Rs1D, Rs2D;
     logic [4:0] Rs1E, Rs2E, RdE;
-    logic ResultSrcE;
     logic [4:0] RdM, RdW;
     logic RegWriteM, RegWriteW;
+    logic SrcAsrcE, ALUSrcE;
 
     logic [2:0] funct3;
     logic jumpRegD;
-    logic [1:0] src1;
-
-    // ----------------------------
 
     controller c(
         .op(InstrD[6:0]),
         .funct3(InstrD[14:12]),
-        .funct7(InstrD[31:25]),
+        .funct7b5(InstrD[30]),
         
         .RegWriteD(RegWriteD),
         .ResultSrcD(ResultSrcD),
@@ -94,7 +96,10 @@ module riscv (input logic clk, clr,
                 .RegWriteM(RegWriteM), .RegWriteW(RegWriteW),
                 .RdE(RdE),
                 .RdM(RdM),
-                .RdW(RdW));
+                .RdW(RdW),
+                .SrcAsrcE(SrcAsrcE),
+                .ALUSrcE(ALUSrcE)
+    );
 
     hazard hu(
         .Rs1D(Rs1D), .Rs2D(Rs2D),
@@ -105,6 +110,8 @@ module riscv (input logic clk, clr,
         .RegWriteM(RegWriteM),
         .RdW(RdW),
         .RegWriteW(RegWriteW),
+        .SrcAsrcE(SrcAsrcE),
+        .ALUSrcE(ALUSrcE),
 
         .StallF(StallF),
         .StallD(StallD), .FlushD(FlushD),

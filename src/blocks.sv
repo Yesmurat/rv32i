@@ -1,9 +1,3 @@
-module adder (input [31:0] a, b,
-                output [31:0] y);
-
-    assign y =  a + b;
-endmodule // adder
-
 module mux2 (input logic [31:0] d0, d1,
               input logic s,
               output logic [31:0] y);
@@ -11,12 +5,12 @@ module mux2 (input logic [31:0] d0, d1,
     assign y = s ? d1: d0;
 endmodule // 2-to-1 multiplexer
 
-module mux3 (input logic [31:0] d0, d1, d2,
-                 input logic [1:0] s,
-                 output logic [31:0] y);
+// module mux3 (input logic [31:0] d0, d1, d2,
+//                  input logic [1:0] s,
+//                  output logic [31:0] y);
     
-    assign y = s[1] ? d2 : (s[0] ? d1 : d0);
-endmodule // 3-to-1 mux
+//     assign y = s[1] ? d2 : (s[0] ? d1 : d0);
+// endmodule // 3-to-1 mux
 
 module mux4 (input logic [31:0] d0, d1, d2, d3,
              input logic [1:0] s,
