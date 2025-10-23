@@ -1,44 +1,50 @@
-# RV32I 5-stage Pipelined Core
+# RV32I 5-Stage Pipelined Processor
 
 ## Overview
-This project implements a classic **5-stage pipelined RV32I core** in SystemVerilog with the following:
+This project implements a **5-stage pipelined RV32I RISC-V processor** in SystemVerilog.  
+It follows the classic pipeline structure and includes hazard detection, forwarding logic, and memory modules built using FPGA resources.
 
-    - IF, ID, EX, MEM, WB stages
-    - Forwarding and hazard detection
-    - Instruction and Data memory interface
+**Pipeline stages:**
+- Instruction Fetch (IF)
+- Instruction Decode (ID)
+- Execute (EX)
+- Memory Access (MEM)
+- Write Back (WB)
 
-The design is verified via simulation using Altera Questa FPGA Simulator.
+The design was **simulated and verified in Vivado** and later **tested on the Arty S7-25 FPGA board**.
 
 ---
 
 ## Features
-    - Fully functional RV32I base integer instructions (R/I/S/B/J types)
-    - 5-stage pipelined with forwarding and stall logic
-    - Separate instruction and data memory modules
-    - Byte-enable logic for store operations
-    - Clear/reset signal handling
+- Implements all **RV32I base integer instructions** (R, I, S, B, and J types)
+- Fully pipelined architecture with **forwarding and stall control**
+- Separate **instruction and data memory modules** built from LUTs
+- **Byte-enable logic** for store instructions
+- Supports **clear/reset** signal and hazard resolution
 
 ---
 
-
 ## Verification
-    - 40+ tests cases for each instruction type
-    - Waveform snapshots included in `tb/waveforms/`
-    - Example assembly programs tested via simulation
-    - Testbench supports clock and reset, simulates realistic instruction sequences
+- **40+ directed test cases** covering all instruction types
+- Testbench includes **clock, reset, and realistic instruction sequences**
+- Waveform analysis performed in **Vivado Simulator**
+- Example assembly programs located in `tests/`
+- Waveform captures available in `tb/waveforms/`
 
 ---
 
 ## FPGA Implementation
-    - Target: Intel/Altera FPGA
-    - Fmax: 127.45 MHz
-    - Resouce: < 1% ALMs
-    - Top-level constraints included in `sdc/top.sdc`
+- **Target Board:** Arty S7-25 (Xilinx Spartan-7)
+- **Implementation Tool:** Xilinx Vivado
+- **Max Frequency (Fmax):** ~100 MHz (post-implementation)
+- **Instruction & Data Memories:** Implemented using LUTs (distributed memory)
+- **Constraints File:** `xdc/arty_s7_25.xdc`
+- **Design tested successfully on real FPGA hardware**
 
 ---
 
 ## Simulation
-```
+To run a functional simulation in Vivado:
+```bash
 vlog src/*.sv tb/top_tb.sv
-vsim top_tb
-```
+vsim tb/top_tb
