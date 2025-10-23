@@ -46,5 +46,18 @@ The design was **simulated and verified in Vivado** and later **tested on the Ar
 ## Simulation
 To run a functional simulation in Vivado:
 ```bash
-vlog src/*.sv tb/top_tb.sv
-vsim tb/top_tb
+# Read your RTL and testbench files
+read_verilog [glob ./src/*.sv]
+read_verilog ./tb/top_tb.sv
+
+# Set the top-level testbench module
+set_property top top_tb [current_fileset]
+
+# Elaborate and launch simulation
+launch_simulation
+
+# (Optional) Add signals to waveform
+add_wave *
+
+# Run the simulation
+run all
